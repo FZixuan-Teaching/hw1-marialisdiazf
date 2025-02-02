@@ -81,7 +81,15 @@ def greedy_algorithm(P: dict, D: dict, patient_status: dict, donor_status: dict,
 
   ### Question 1.1(b).i: Code the greedy algorithm and append matches to the list 'matches'
   matches = []
-
+ 
+for p in patients:
+    for d in donors:
+        if patient_status[p] == False:    
+            if can_receive(P[p], D[d]) and donor_status[d] == False:
+                matches.append((p, d))
+                patient_status[p] = True
+                donor_status[d] = True
+                break
   return matches
 
 
