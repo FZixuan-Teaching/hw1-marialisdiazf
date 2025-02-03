@@ -346,7 +346,8 @@ def simulate(
   print('1.1(b)iv: Average time in system:', sum(TIS.values()) / num_patients))
   print('Average time in system (by type, weighed by num_patients):', {key : sum(TIS[i] for i in patients if patients[i] == key) / num_patients for key in compatible_blood_type.keys()})
   print('1.1(b)iv: Average time in system (by type, weighed by num_patients_by_type):', TIS_BT)
-  print('1.1(b)v: Average proportion of patients matched per period by type:', "TODO for extra credit")
+  print('1.1(b)v: Average proportion of patients matched per period by type:', {bt: num_matched_by_type[bt] / num_avail_patients_by_type[bt]) if num_avail_patients_by_type[bt] > 0 else 1.0
+    for bt in compatible_blood_type.keys()})
 
   return num_matched_by_type, num_patients
 
