@@ -85,7 +85,7 @@ def greedy_algorithm(P: dict, D: dict, patient_status: dict, donor_status: dict,
 for p in patients:
     for d in donors:
         if patient_status[p] == False:    
-            if can_receive(P[p], D[d]) and donor_status[d] == False:
+            if can_receive(P[p], D[d], compatible_blood_type) and donor_status[d] == False:
                 matches.append((p, d))
                 patient_status[p] = True
                 donor_status[d] = True
@@ -119,12 +119,21 @@ def mip(P: dict, D: dict, patient_status: dict, donor_status: dict, compatible_b
   sys.stdout.flush()
 
   # Variables: x_{i,j} binary representing whether patient i to donor j
+x = {}
+    for i in patients:
+        for j in donors:
+            if can_receive(P[i], D[j], compatible_blood_type):
+                x[i, j] = model.addVar(vtype=GRB.BINARY, name = "x_{i,j}")
+
 
   # Constraint: Each patient can be matched to at most one (compatible) donor
+model.addConstr(x[i] for i in patients in x) <= 1, name="c1")
 
   # Constraint: Each donor can be matched to at most one (compatible) patient
-
+model.addConstr(x[j] for j in patients in x) <= 1, name="c2")
+  
   # Objective: Maximize number of transplants
+ model.setObjective(quicksum(x[i, j] for (i, j) in x), GRB.MAXIMIZE)
 
   # Optimize
   model.params.outputflag = 0
@@ -133,7 +142,8 @@ def mip(P: dict, D: dict, patient_status: dict, donor_status: dict, compatible_b
 
   # Set matches based on solution to model
   matches = []
-
+  for v in model.getVars():
+      matches.append(v.varName, v.X)
   return matches
 
 
