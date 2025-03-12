@@ -82,15 +82,15 @@ def greedy_algorithm(P: dict, D: dict, patient_status: dict, donor_status: dict,
   ### Question 1.1(b).i: Code the greedy algorithm and append matches to the list 'matches'
   matches = []
  
-  for p in patients:
-      for d in donors:
-          if patient_status[p] == False:    
-              if can_receive(P[p], D[d], compatible_blood_type) and donor_status[d] == False:
-                  matches.append((p, d))
-                  patient_status[p] = True
-                  donor_status[d] = True
-                  break
-  return matches
+for p in patients:
+    for d in donors:
+        if patient_status[p] == False:    
+            if can_receive(P[p], D[d], compatible_blood_type) and donor_status[d] == False:
+                matches.append((p, d))
+                patient_status[p] = True
+                donor_status[d] = True
+                break
+          return matches
 
 
 # %%
@@ -119,11 +119,11 @@ def mip(P: dict, D: dict, patient_status: dict, donor_status: dict, compatible_b
   sys.stdout.flush()
 
   # Variables: x_{i,j} binary representing whether patient i to donor j
-  x = {}
-  for i in patients:
-      for j in donors:
-          if can_receive(P[i], D[j], compatible_blood_type):
-              x[i, j] = model.addVar(vtype=GRB.BINARY, name = "x_{i,j}")
+x = {}
+    for i in patients:
+        for j in donors:
+            if can_receive(P[i], D[j], compatible_blood_type):
+                x[i, j] = model.addVar(vtype=GRB.BINARY, name = "x_{i,j}")
 
 
   # Constraint: Each patient can be matched to at most one (compatible) donor
@@ -346,8 +346,7 @@ def simulate(
   print('1.1(b)iv: Average time in system:', sum(TIS.values()) / num_patients))
   print('Average time in system (by type, weighed by num_patients):', {key : sum(TIS[i] for i in patients if patients[i] == key) / num_patients for key in compatible_blood_type.keys()})
   print('1.1(b)iv: Average time in system (by type, weighed by num_patients_by_type):', TIS_BT)
-  print('1.1(b)v: Average proportion of patients matched per period by type:', {bt: num_matched_by_type[bt] / num_avail_patients_by_type[bt]) if num_avail_patients_by_type[bt] > 0 else 1.0
-    for bt in compatible_blood_type.keys()})
+  print('1.1(b)v: Average proportion of patients matched per period by type:', "TODO for extra credit")
 
   return num_matched_by_type, num_patients
 
