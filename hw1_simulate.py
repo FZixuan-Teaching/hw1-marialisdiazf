@@ -82,14 +82,14 @@ def greedy_algorithm(P: dict, D: dict, patient_status: dict, donor_status: dict,
   ### Question 1.1(b).i: Code the greedy algorithm and append matches to the list 'matches'
   matches = []
  
-for p in patients:
-    for d in donors:
-        if patient_status[p] == False:    
-            if can_receive(P[p], D[d], compatible_blood_type) and donor_status[d] == False:
-                matches.append((p, d))
-                patient_status[p] = True
-                donor_status[d] = True
-                break
+  for p in patients:
+      for d in donors:
+          if patient_status[p] == False:    
+              if can_receive(P[p], D[d], compatible_blood_type) and donor_status[d] == False:
+                  matches.append((p, d))
+                  patient_status[p] = True
+                  donor_status[d] = True
+                  break
   return matches
 
 
@@ -119,11 +119,11 @@ def mip(P: dict, D: dict, patient_status: dict, donor_status: dict, compatible_b
   sys.stdout.flush()
 
   # Variables: x_{i,j} binary representing whether patient i to donor j
-x = {}
-    for i in patients:
-        for j in donors:
-            if can_receive(P[i], D[j], compatible_blood_type):
-                x[i, j] = model.addVar(vtype=GRB.BINARY, name = "x_{i,j}")
+  x = {}
+  for i in patients:
+      for j in donors:
+          if can_receive(P[i], D[j], compatible_blood_type):
+              x[i, j] = model.addVar(vtype=GRB.BINARY, name = "x_{i,j}")
 
 
   # Constraint: Each patient can be matched to at most one (compatible) donor
