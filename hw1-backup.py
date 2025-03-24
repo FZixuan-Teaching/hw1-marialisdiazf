@@ -84,13 +84,13 @@ def greedy_algorithm(P: dict, D: dict, patient_status: dict, donor_status: dict,
   matches = []
  
   for p in patients:
-    for d in donors:
-      if patient_status[p] == False:    
-        if can_receive(P[p], D[d], compatible_blood_type) and donor_status[d] == False:
-          matches.append((p, d))
-          patient_status[p] = True
-          donor_status[d] = True
-          break
+      for d in donors:
+          if patient_status[p] == False:    
+              if can_receive(P[p], D[d], compatible_blood_type) and donor_status[d] == False:
+                  matches.append((p, d))
+                  patient_status[p] = True
+                  donor_status[d] = True
+                  break
   return matches
 
 
@@ -122,29 +122,28 @@ def mip(P: dict, D: dict, patient_status: dict, donor_status: dict, compatible_b
   # Variables: x_{i,j} binary representing whether patient i to donor j
   x = {}
   for i in patients:
-      for j in donors:
-          if can_receive(P[i], D[j], compatible_blood_type):
-              x[i, j] = model.addVar(vtype=GRB.BINARY, name= f"{i}, {j}")
+    for j in donors:
+      if can_receive(P[i], D[j], compatible_blood_type):
+          x[i, j] = model.addVar(vtype=GRB.BINARY, name = f"x_{i,j}")
 
-  # Constraint: Each patient can be matched to at most one (compatible) donor
+    # Constraint: Each patient can be matched to at most one (compatible) donor
   model.addConstrs((x[i] <= 1 for i in x), "c1")
 
-  # Constraint: Each donor can be matched to at most one (compatible) patient
-  model.addConstrs((x[j] <=1 for j in x), "c2")
-  
-  # Objective: Maximize number of transplants
+    # Constraint: Each donor can be matched to at most one (compatible) patient
+  model.addConstrs((x[j] <= 1 for j in x), "c1")
+    
+    # Objective: Maximize number of transplants
   model.setObjective(quicksum(x[i, j] for (i, j) in x), GRB.MAXIMIZE)
 
-  # Optimize
+    # Optimize
   model.params.outputflag = 0
   model.optimize()
   model.params.LogToConsole = 0
 
-  # Set matches based on solution to model
+    # Set matches based on solution to model
   matches = []
   for v in model.getVars():
-      patient, donor = v.varName.split(", ")  # Split into two keys
-      matches.append((patient, donor))  # Store as a tuple of valid keys
+      matches.append((v.varName, v.X))
   return matches
 
 
@@ -303,11 +302,12 @@ def simulate(
                              compatible_blood_type)
 
     # Update statistics: for every match m, 
-    # m[0] (the patient) and m[1] (the donor) are no longer available or waiting        
+    # m[0] (the patient) and m[1] (the donor) are no longer available or waiting
     curr_num_matched = {key: 0 for key in compatible_blood_type.keys()}
     for m in matches:
       # Double check compatibility
       assert(can_receive(patients[m[0]], donors[m[1]], compatible_blood_type))
+
       patient_status[m[0]] = True
       donor_status[m[1]] = True
       num_matched_by_type[patients[m[0]]] += 1
