@@ -1,6 +1,7 @@
 # %%
 import numpy as np
 from gurobipy import *
+import sys
 
 # %%
 ## Set variables that will be used throughout
@@ -123,14 +124,13 @@ def mip(P: dict, D: dict, patient_status: dict, donor_status: dict, compatible_b
   for i in patients:
       for j in donors:
           if can_receive(P[i], D[j], compatible_blood_type):
-              x[i, j] = model.addVar(vtype=GRB.BINARY, name = "x_{i,j}")
-
+              x[i, j] = model.addVar(vtype=GRB.BINARY, name= f"{i}, {j}")
 
   # Constraint: Each patient can be matched to at most one (compatible) donor
-  model.addConstr((x[i] for i in patients in x) <= 1, name="c1")
+  model.addConstrs((x[i] <= 1 for i in x), "c1")
 
   # Constraint: Each donor can be matched to at most one (compatible) patient
-  model.addConstr((x[j] for j in patients in x) <= 1, name="c2")
+  model.addConstrs((x[j] <=1 for j in x), "c2")
   
   # Objective: Maximize number of transplants
   model.setObjective(quicksum(x[i, j] for (i, j) in x), GRB.MAXIMIZE)
@@ -143,7 +143,7 @@ def mip(P: dict, D: dict, patient_status: dict, donor_status: dict, compatible_b
   # Set matches based on solution to model
   matches = []
   for v in model.getVars():
-      matches.append(v.varName, v.X)
+      matches.append((v.varName, v.X))
   return matches
 
 
@@ -302,12 +302,11 @@ def simulate(
                              compatible_blood_type)
 
     # Update statistics: for every match m, 
-    # m[0] (the patient) and m[1] (the donor) are no longer available or waiting
+    # m[0] (the patient) and m[1] (the donor) are no longer available or waiting        
     curr_num_matched = {key: 0 for key in compatible_blood_type.keys()}
     for m in matches:
       # Double check compatibility
       assert(can_receive(patients[m[0]], donors[m[1]], compatible_blood_type))
-
       patient_status[m[0]] = True
       donor_status[m[1]] = True
       num_matched_by_type[patients[m[0]]] += 1
