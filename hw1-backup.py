@@ -1,6 +1,7 @@
 # %%
 import numpy as np
 from gurobipy import *
+import sys
 
 # %%
 ## Set variables that will be used throughout
@@ -82,15 +83,15 @@ def greedy_algorithm(P: dict, D: dict, patient_status: dict, donor_status: dict,
   ### Question 1.1(b).i: Code the greedy algorithm and append matches to the list 'matches'
   matches = []
  
-for p in patients:
-    for d in donors:
-        if patient_status[p] == False:    
-            if can_receive(P[p], D[d], compatible_blood_type) and donor_status[d] == False:
-                matches.append((p, d))
-                patient_status[p] = True
-                donor_status[d] = True
-                break
-          return matches
+  for p in patients:
+      for d in donors:
+          if patient_status[p] == False:    
+              if can_receive(P[p], D[d], compatible_blood_type) and donor_status[d] == False:
+                  matches.append((p, d))
+                  patient_status[p] = True
+                  donor_status[d] = True
+                  break
+  return matches
 
 
 # %%
@@ -119,31 +120,30 @@ def mip(P: dict, D: dict, patient_status: dict, donor_status: dict, compatible_b
   sys.stdout.flush()
 
   # Variables: x_{i,j} binary representing whether patient i to donor j
-x = {}
-    for i in patients:
-        for j in donors:
-            if can_receive(P[i], D[j], compatible_blood_type):
-                x[i, j] = model.addVar(vtype=GRB.BINARY, name = "x_{i,j}")
+  x = {}
+  for i in patients:
+    for j in donors:
+      if can_receive(P[i], D[j], compatible_blood_type):
+          x[i, j] = model.addVar(vtype=GRB.BINARY, name = f"x_{i,j}")
 
+    # Constraint: Each patient can be matched to at most one (compatible) donor
+  model.addConstrs((x[i] <= 1 for i in x), "c1")
 
-  # Constraint: Each patient can be matched to at most one (compatible) donor
-model.addConstr(x[i] for i in patients in x) <= 1, name="c1")
+    # Constraint: Each donor can be matched to at most one (compatible) patient
+  model.addConstrs((x[j] <= 1 for j in x), "c1")
+    
+    # Objective: Maximize number of transplants
+  model.setObjective(quicksum(x[i, j] for (i, j) in x), GRB.MAXIMIZE)
 
-  # Constraint: Each donor can be matched to at most one (compatible) patient
-model.addConstr(x[j] for j in patients in x) <= 1, name="c2")
-  
-  # Objective: Maximize number of transplants
- model.setObjective(quicksum(x[i, j] for (i, j) in x), GRB.MAXIMIZE)
-
-  # Optimize
+    # Optimize
   model.params.outputflag = 0
   model.optimize()
   model.params.LogToConsole = 0
 
-  # Set matches based on solution to model
+    # Set matches based on solution to model
   matches = []
   for v in model.getVars():
-      matches.append(v.varName, v.X)
+      matches.append((v.varName, v.X))
   return matches
 
 
@@ -343,7 +343,7 @@ def simulate(
   print('Number of patients by type:', num_patients_by_type)
   print('Number of patients matched:', num_matched_by_type)
   print('1.1(b)iii: Average number of patients (per blood type) matched per period:', {bt: num_matched_by_type[bt] / num_periods for bt in compatible_blood_type.keys()} )
-  print('1.1(b)iv: Average time in system:', sum(TIS.values()) / num_patients))
+  print('1.1(b)iv: Average time in system:', sum(TIS.values()) / num_patients)
   print('Average time in system (by type, weighed by num_patients):', {key : sum(TIS[i] for i in patients if patients[i] == key) / num_patients for key in compatible_blood_type.keys()})
   print('1.1(b)iv: Average time in system (by type, weighed by num_patients_by_type):', TIS_BT)
   print('1.1(b)v: Average proportion of patients matched per period by type:', "TODO for extra credit")
