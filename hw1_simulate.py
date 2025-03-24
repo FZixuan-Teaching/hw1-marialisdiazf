@@ -143,7 +143,8 @@ def mip(P: dict, D: dict, patient_status: dict, donor_status: dict, compatible_b
   # Set matches based on solution to model
   matches = []
   for v in model.getVars():
-      matches.append((v.varName, v.X))
+      patient, donor = v.varName.split(", ")  # Split into two keys
+      matches.append((patient, donor))  # Store as a tuple of valid keys
   return matches
 
 
